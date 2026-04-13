@@ -1,0 +1,29 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { width: 360px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 14px; }
+.container { padding: 16px; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.header h1 { font-size: 16px; font-weight: 700; }
+.status-badge { font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: 600; }
+.status-idle { background: #e5e7eb; color: #374151; }
+.status-running { background: #d1fae5; color: #065f46; }
+.status-paused { background: #fef3c7; color: #92400e; }
+.stats { display: flex; gap: 12px; margin-bottom: 16px; }
+.stat { flex: 1; text-align: center; padding: 8px; background: #f9fafb; border-radius: 8px; }
+.stat-value { font-size: 20px; font-weight: 700; }
+.stat-label { font-size: 11px; color: #6b7280; }
+.url-input { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; margin-bottom: 12px; }
+.url-input:focus { outline: none; border-color: #3b82f6; }
+.controls { display: flex; gap: 8px; margin-bottom: 16px; }
+.btn { flex: 1; padding: 8px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; }
+.btn-primary { background: #3b82f6; color: white; }
+.btn-primary:hover { background: #2563eb; }
+.btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
+.btn-danger { background: #ef4444; color: white; }
+.btn-secondary { background: #e5e7eb; color: #374151; }
+.logs { max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px; }
+.log-entry { font-size: 12px; padding: 2px 0; color: #374151; }
+.log-success { color: #059669; }
+.log-error { color: #dc2626; }
+.log-warning { color: #d97706; }
+.auth-prompt { text-align: center; padding: 20px; }
+.auth-prompt a { color: #3b82f6; text-decoration: underline; }

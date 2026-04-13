@@ -1,6 +1,12 @@
-import { defineConfig } from 'wxt';
+import { defineConfig } from "wxt";
 
-// See https://wxt.dev/api/config.html
 export default defineConfig({
-  modules: ['@wxt-dev/module-react'],
+  srcDir: "src",
+  modules: ["@wxt-dev/module-react"],
+  manifest: {
+    name: "oh-my-jobapplication",
+    description: "AI-powered job application automation",
+    permissions: ["storage", "activeTab", "tabs"],
+    host_permissions: ["https://www.linkedin.com/*", "http://localhost:3000/*", "http://localhost:8000/*"],
+  },
 });
