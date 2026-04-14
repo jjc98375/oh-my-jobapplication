@@ -29,7 +29,7 @@ export default function App() {
         <h1>oh-my-jobapplication</h1>
         <p style={{ margin: "12px 0", color: "#6b7280" }}>Sign in on the web app first, then click below to connect.</p>
         <button className="btn btn-primary" style={{ width: "100%" }}
-          onClick={() => browser.tabs.create({ url: "http://localhost:3000/api/extension/token" })}>
+          onClick={() => browser.tabs.create({ url: `${import.meta.env.VITE_WEB_APP_URL || "http://localhost:3000"}/api/extension/token` })}>
           Connect Account
         </button>
       </div>

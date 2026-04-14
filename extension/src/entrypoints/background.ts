@@ -18,12 +18,18 @@ async function updateStatus(updates: Partial<ApplyStatus>) {
   await statusStorage.setValue({ ...current, ...updates });
 }
 
+const WAIT_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+
 async function waitForState(targetState: string): Promise<boolean> {
   return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      resolve(false);
+    }, WAIT_TIMEOUT_MS);
+
     const check = async () => {
       const status = await statusStorage.getValue();
-      if (status.state === targetState) resolve(true);
-      else if (status.state === "idle") resolve(false);
+      if (status.state === targetState) { clearTimeout(timeout); resolve(true); }
+      else if (status.state === "idle") { clearTimeout(timeout); resolve(false); }
       else setTimeout(check, 500);
     };
     check();
@@ -66,11 +72,12 @@ async function applyToJob(
     });
 
     const screeningQuestions = fieldsResult.fields.filter(
-      (f: any) => (f.fieldType === "textarea" || f.fieldType === "radio" || f.fieldType === "select")
-        && !mappingResult.mappings.find((m: any) => m.field_id === f.fieldId)
+      (f: { fieldType: string; fieldId: string }) =>
+        (f.fieldType === "textarea" || f.fieldType === "radio" || f.fieldType === "select")
+        && !mappingResult.mappings.find((m: { field_id: string }) => m.field_id === f.fieldId)
     );
 
-    let screeningAnswers: any[] = [];
+    let screeningAnswers: Array<{ field_id: string; answer: string }> = [];
     if (screeningQuestions.length > 0) {
       const screeningResult = await getScreeningAnswers({
         job_title: job.title, company_name: job.company,
@@ -80,8 +87,8 @@ async function applyToJob(
     }
 
     const allAnswers = [
-      ...mappingResult.mappings.map((m: any) => ({ field_id: m.field_id, value: m.value })),
-      ...screeningAnswers.map((a: any) => ({ field_id: a.field_id, value: a.answer })),
+      ...mappingResult.mappings.map((m: { field_id: string; value: string }) => ({ field_id: m.field_id, value: m.value })),
+      ...screeningAnswers.map((a) => ({ field_id: a.field_id, value: a.answer })),
     ];
 
     for (const answer of allAnswers) {
@@ -133,7 +140,7 @@ async function startApplyLoop(url: string) {
   if (!tab.id) { await addLog(log("Failed to open tab", "error")); await updateStatus({ state: "idle" }); return; }
 
   await new Promise((resolve) => {
-    const listener = (tabId: number, info: any) => {
+    const listener = (tabId: number, info: { status?: string }) => {
       if (tabId === tab.id && info.status === "complete") { browser.tabs.onUpdated.removeListener(listener); resolve(true); }
     };
     browser.tabs.onUpdated.addListener(listener);
@@ -173,11 +180,19 @@ async function startApplyLoop(url: string) {
     if (result.success) {
       await addLog(log(`Applied: ${job.title} at ${job.company}`, "success"));
       await updateStatus({ completed: status.completed + 1, dailyCount: status.dailyCount + 1, queue: listings.slice(i + 1) });
-      try { await reportApplication({ job_url: job.applyUrl, company_name: job.company, job_title: job.title, job_description: job.description, status: "applied", source_url: url, platform: "linkedin" }); } catch {}
+      try {
+        await reportApplication({ job_url: job.applyUrl, company_name: job.company, job_title: job.title, job_description: job.description, status: "applied", source_url: url, platform: "linkedin" });
+      } catch (err) {
+        await addLog(log(`Failed to report application: ${err}`, "warning"));
+      }
     } else {
       await addLog(log(`Failed: ${job.title} — ${result.error}`, "error"));
       await updateStatus({ failed: status.failed + 1, queue: listings.slice(i + 1) });
-      try { await reportApplication({ job_url: job.applyUrl, company_name: job.company, job_title: job.title, status: "failed", failure_reason: result.error, source_url: url, platform: "linkedin" }); } catch {}
+      try {
+        await reportApplication({ job_url: job.applyUrl, company_name: job.company, job_title: job.title, status: "failed", failure_reason: result.error, source_url: url, platform: "linkedin" });
+      } catch (err) {
+        await addLog(log(`Failed to report application: ${err}`, "warning"));
+      }
     }
 
     await new Promise((r) => setTimeout(r, 2000));

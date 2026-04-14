@@ -1,7 +1,8 @@
 import { authStorage } from "./storage";
 
-const WEB_APP_URL = "http://localhost:3000";
-const AI_BACKEND_URL = "http://localhost:8000";
+const WEB_APP_URL = import.meta.env.VITE_WEB_APP_URL || "http://localhost:3000";
+const AI_BACKEND_URL = import.meta.env.VITE_AI_BACKEND_URL || "http://localhost:8000";
+const AI_API_KEY = import.meta.env.VITE_AI_API_KEY || "";
 
 async function getToken(): Promise<string | null> {
   const auth = await authStorage.getValue();
@@ -43,8 +44,10 @@ export async function getScreeningAnswers(request: {
   questions: Array<{ field_id: string; label: string; field_type: string; options?: string[]; required?: boolean }>;
   user_profile: Record<string, unknown>;
 }) {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (AI_API_KEY) headers["X-API-Key"] = AI_API_KEY;
   const res = await fetch(`${AI_BACKEND_URL}/screening/answer`, {
-    method: "POST", headers: { "Content-Type": "application/json" },
+    method: "POST", headers,
     body: JSON.stringify(request),
   });
   if (!res.ok) throw new Error(`AI backend error: ${res.status}`);
@@ -55,8 +58,10 @@ export async function getFieldMappings(request: {
   fields: Array<{ field_id: string; label: string; field_type: string; options?: string[] }>;
   user_profile: Record<string, unknown>; user_name: string; user_email: string;
 }) {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (AI_API_KEY) headers["X-API-Key"] = AI_API_KEY;
   const res = await fetch(`${AI_BACKEND_URL}/mapping/fields`, {
-    method: "POST", headers: { "Content-Type": "application/json" },
+    method: "POST", headers,
     body: JSON.stringify(request),
   });
   if (!res.ok) throw new Error(`AI backend error: ${res.status}`);
